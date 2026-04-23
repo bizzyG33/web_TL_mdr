@@ -375,7 +375,7 @@ export function EmailAlertGeneratorApp({ userEmail }: Props) {
         </section>
 
         <section className="workspace-panel workspace-output">
-          <div className="output-card">
+          <div className="output-card subject-card">
             <div className="panel-heading">
               <div>
                 <span className="eyebrow">Subject</span>
@@ -394,7 +394,7 @@ export function EmailAlertGeneratorApp({ userEmail }: Props) {
             <div className="readout">{generation?.subject ?? "No subject generated yet."}</div>
           </div>
 
-          <div className="output-card">
+          <div className="output-card email-card">
             <div className="panel-heading">
               <div>
                 <span className="eyebrow">Email</span>
@@ -422,71 +422,6 @@ export function EmailAlertGeneratorApp({ userEmail }: Props) {
                   '<div style="margin:0; line-height:1.5; color:#000000;"><strong>No preview available.</strong></div>'
               }}
             />
-          </div>
-
-          <div className="output-grid">
-            <div className="output-card">
-              <div className="panel-heading">
-                <div>
-                  <span className="eyebrow">Summary</span>
-                  <h2>Bullets</h2>
-                </div>
-                <button
-                  className="button-ghost"
-                  type="button"
-                  onClick={() =>
-                    copyText(
-                      generation?.summaryBullets ?? "",
-                      "Summary bullets copied to clipboard."
-                    )
-                  }
-                >
-                  Copy
-                </button>
-              </div>
-              <pre className="output-pre compact-pre">
-                {generation?.summaryBullets ?? "Summary bullets will appear after generation."}
-              </pre>
-            </div>
-
-            <div className="output-card">
-              <div className="panel-heading">
-                <div>
-                  <span className="eyebrow">Case Note</span>
-                  <h2>Clear Reasoning Starter</h2>
-                </div>
-                <button
-                  className="button-ghost"
-                  type="button"
-                  onClick={() =>
-                    copyText(
-                      generation?.clearReasoningStarter ?? "",
-                      "Clear reasoning starter copied to clipboard."
-                    )
-                  }
-                >
-                  Copy
-                </button>
-              </div>
-              <pre className="output-pre compact-pre">
-                {generation?.clearReasoningStarter ?? "Clear reasoning starter will appear here."}
-              </pre>
-            </div>
-          </div>
-
-          <div className="output-card">
-            <div className="panel-heading">
-              <div>
-                <span className="eyebrow">Validation</span>
-                <h2>Generation Checks</h2>
-              </div>
-              {generation?.templateFileName ? (
-                <div className="template-pill">{generation.templateFileName}</div>
-              ) : null}
-            </div>
-            <pre className="output-pre compact-pre">
-              {generation?.validationSummary ?? "Validation output will appear after generation."}
-            </pre>
           </div>
         </section>
       </div>

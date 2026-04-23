@@ -129,6 +129,20 @@ async function enrichIp(
     );
   }
 
+  tasks.push(
+    fetchIpInfo(ipAddress).then((ipInfoData) => {
+      if (!ipInfoData) {
+        return;
+      }
+
+      result.country = chooseBetterLocationValue(result.country, ipInfoData.country);
+      result.region = chooseBetterLocationValue(result.region, ipInfoData.region);
+      result.regionCode = chooseBetterLocationValue(result.regionCode, ipInfoData.region);
+      result.city = chooseBetterLocationValue(result.city, ipInfoData.city);
+      result.isp = chooseBetterProviderValue(result.isp, ipInfoData.org);
+    })
+  );
+
   if (needs.abuseIpDb && apiKeys.abuseIpDb) {
     tasks.push(
       fetchAbuseIpDb(ipAddress, apiKeys.abuseIpDb).then((abuseData) => {
@@ -284,4 +298,60 @@ function toString(value: unknown): string {
 
 function safeTrim(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+async function fetchIpInfo(ipAddress: string) {
+  const response = await fetch(`https://ipinfo.io/${encodeURIComponent(ipAddress)}/json`, {
+    headers: {
+      Accept: "application/json"
+    },
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    return undefined;
+  }
+
+  const payload = (await response.json()) as {
+    city?: string;
+    region?: string;
+    country?: string;
+    org?: string;
+  };
+
+  return {
+    city: safeTrim(payload.city),
+    region: safeTrim(payload.region),
+    country: safeTrim(payload.country),
+    org: safeTrim(payload.org)
+  };
+}
+
+function chooseBetterLocationValue(current: string | undefined, fallback: string | undefined): string | undefined {
+  if (!fallback) {
+    return current;
+  }
+
+  if (!current || isUnavailableValue(current)) {
+    return fallback;
+  }
+
+  return current;
+}
+
+function chooseBetterProviderValue(current: string | undefined, fallback: string | undefined): string | undefined {
+  if (!fallback) {
+    return current;
+  }
+
+  if (!current || isUnavailableValue(current) || current === "Unavailable in web-only mode") {
+    return fallback;
+  }
+
+  return current;
+}
+
+function isUnavailableValue(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  return !normalized || normalized === "unknown" || normalized === "unavailable" || normalized === "n/a";
 }

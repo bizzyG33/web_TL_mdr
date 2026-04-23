@@ -724,16 +724,56 @@ export function parseAlertLog(logText: string): ParsedAlertLog {
       get("TapEndDateTime", "TemporaryAccessPass.TemporaryAccessPass.EndTime") ||
       extractNamedField(logText, "TemporaryAccessPass.TemporaryAccessPass.EndTime"),
     ipAddress,
-    firstLoginIp: get("FirstLoginIp", "First Login IP", "firstLoginIp"),
-    secondLoginIp: get("SecondLoginIp", "Second Login IP", "secondLoginIp"),
-    firstLoginCreatedDateRaw: get("FirstLoginCreatedDate", "First Login CreatedDate", "FirstLogin.CreatedDate"),
-    secondLoginCreatedDateRaw: get("SecondLoginCreatedDate", "Second Login CreatedDate", "SecondLogin.CreatedDate"),
-    firstLoginCity: get("FirstLoginCity", "First Login City", "FirstLogin.City"),
-    firstLoginRegion: get("FirstLoginRegion", "First Login Region", "FirstLogin.Region"),
-    firstLoginCountry: get("FirstLoginCountry", "First Login Country", "FirstLogin.Country"),
-    secondLoginCity: get("SecondLoginCity", "Second Login City", "SecondLogin.City"),
-    secondLoginRegion: get("SecondLoginRegion", "Second Login Region", "SecondLogin.Region"),
-    secondLoginCountry: get("SecondLoginCountry", "Second Login Country", "SecondLogin.Country"),
+    firstLoginIp:
+      get("FirstLoginIp", "First Login IP", "firstLoginIp", "FirstLogin.IP", "FirstLogin.IpAddress") ||
+      extractNamedField(logText, "FirstLogin.IP") ||
+      extractNamedField(logText, "First Login IP"),
+    secondLoginIp:
+      get("SecondLoginIp", "Second Login IP", "secondLoginIp", "SecondLogin.IP", "SecondLogin.IpAddress") ||
+      extractNamedField(logText, "SecondLogin.IP") ||
+      extractNamedField(logText, "Second Login IP"),
+    firstLoginCreatedDateRaw:
+      get(
+        "FirstLoginCreatedDate",
+        "First Login CreatedDate",
+        "FirstLogin.CreatedDate",
+        "FirstLogin.CreatedDateTime",
+        "First Login Time",
+        "FirstLogin.Timestamp"
+      ) ||
+      extractNamedField(logText, "FirstLogin.CreatedDate") ||
+      extractNamedField(logText, "FirstLogin.CreatedDateTime") ||
+      extractNamedField(logText, "First Login Time"),
+    secondLoginCreatedDateRaw:
+      get(
+        "SecondLoginCreatedDate",
+        "Second Login CreatedDate",
+        "SecondLogin.CreatedDate",
+        "SecondLogin.CreatedDateTime",
+        "Second Login Time",
+        "SecondLogin.Timestamp"
+      ) ||
+      extractNamedField(logText, "SecondLogin.CreatedDate") ||
+      extractNamedField(logText, "SecondLogin.CreatedDateTime") ||
+      extractNamedField(logText, "Second Login Time"),
+    firstLoginCity:
+      get("FirstLoginCity", "First Login City", "FirstLogin.City", "FirstLogin.Location.City") ||
+      extractNamedField(logText, "FirstLogin.City"),
+    firstLoginRegion:
+      get("FirstLoginRegion", "First Login Region", "FirstLogin.Region", "FirstLogin.Location.State") ||
+      extractNamedField(logText, "FirstLogin.Region"),
+    firstLoginCountry:
+      get("FirstLoginCountry", "First Login Country", "FirstLogin.Country", "FirstLogin.Location.Country") ||
+      extractNamedField(logText, "FirstLogin.Country"),
+    secondLoginCity:
+      get("SecondLoginCity", "Second Login City", "SecondLogin.City", "SecondLogin.Location.City") ||
+      extractNamedField(logText, "SecondLogin.City"),
+    secondLoginRegion:
+      get("SecondLoginRegion", "Second Login Region", "SecondLogin.Region", "SecondLogin.Location.State") ||
+      extractNamedField(logText, "SecondLogin.Region"),
+    secondLoginCountry:
+      get("SecondLoginCountry", "Second Login Country", "SecondLogin.Country", "SecondLogin.Location.Country") ||
+      extractNamedField(logText, "SecondLogin.Country"),
     locationCity: get("LocationCity", "city", "City"),
     locationState: get("LocationState", "state", "Region"),
     locationCountry: get("LocationCountry", "countryOrRegion", "Country", "country"),
@@ -1027,11 +1067,11 @@ function buildFooter(
 }
 
 function formatUtcTimeOrNA(rawValue: string): string {
-  if (!rawValue.trim()) {
+  if (!safeTrim(rawValue)) {
     return "N/A";
   }
 
-  const parsed = new Date(rawValue);
+  const parsed = parseFlexibleDate(rawValue);
   if (Number.isNaN(parsed.getTime())) {
     return "N/A";
   }
@@ -1046,11 +1086,11 @@ function formatUtcTimeOrNA(rawValue: string): string {
 }
 
 function formatEndpointEstTimeOrNA(rawValue: string): string {
-  if (!rawValue.trim()) {
+  if (!safeTrim(rawValue)) {
     return "N/A";
   }
 
-  const parsed = new Date(rawValue);
+  const parsed = parseFlexibleDate(rawValue);
   if (Number.isNaN(parsed.getTime())) {
     return rawValue;
   }
@@ -1068,8 +1108,8 @@ function formatEndpointEstTimeOrNA(rawValue: string): string {
 }
 
 function calculateTapDuration(startRaw: string, endRaw: string): string {
-  const start = new Date(startRaw);
-  const end = new Date(endRaw);
+  const start = parseFlexibleDate(startRaw);
+  const end = parseFlexibleDate(endRaw);
 
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
     return "N/A";
@@ -1274,6 +1314,33 @@ function escapeRegex(value: string): string {
 
 function safeTrim(value: string | null | undefined): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function parseFlexibleDate(rawValue: string): Date {
+  const trimmed = safeTrim(rawValue);
+  if (!trimmed) {
+    return new Date(Number.NaN);
+  }
+
+  if (/^\d{10}$/.test(trimmed)) {
+    return new Date(Number(trimmed) * 1000);
+  }
+
+  if (/^\d{13}$/.test(trimmed)) {
+    return new Date(Number(trimmed));
+  }
+
+  const direct = new Date(trimmed);
+  if (!Number.isNaN(direct.getTime())) {
+    return direct;
+  }
+
+  const normalized = trimmed
+    .replace(/\bUTC\b/i, "Z")
+    .replace(/\s+/g, " ")
+    .replace(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s+/, "$3-$1-$2 ");
+
+  return new Date(normalized);
 }
 
 export function toDisplayText(action: ResponseAction): string {

@@ -311,35 +311,37 @@ input {
 
 .generator-shell {
   min-height: 100vh;
-  padding: 18px 20px 32px;
+  padding: 0;
 }
 
 .generator-topbar {
-  width: min(1380px, 100%);
-  margin: 0 auto 24px;
+  width: min(1280px, 100%);
+  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   gap: 20px;
+  padding: 16px 18px 10px;
 }
 
 .generator-title {
-  margin: 18px 0 8px;
-  font-size: clamp(2.6rem, 4vw, 4.6rem);
-  line-height: 0.95;
-  letter-spacing: -0.05em;
+  margin: 10px 0 4px;
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
 
 .generator-subtitle {
-  max-width: 780px;
+  max-width: 640px;
   color: var(--muted);
-  line-height: 1.6;
+  line-height: 1.45;
+  font-size: 0.95rem;
 }
 
 .workspace-badge {
-  min-width: 260px;
-  padding: 18px 20px;
-  border-radius: 20px;
+  min-width: 220px;
+  padding: 12px 14px;
+  border-radius: 10px;
   border: 1px solid var(--line);
   background: var(--panel);
   box-shadow: var(--shadow);
@@ -353,16 +355,17 @@ input {
 
 .workspace-badge strong {
   display: block;
-  margin-top: 6px;
-  font-size: 1.05rem;
+  margin-top: 4px;
+  font-size: 0.95rem;
 }
 
 .generator-layout {
-  width: min(1380px, 100%);
+  width: min(1280px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 420px minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: 390px minmax(0, 1fr);
+  gap: 14px;
+  padding: 0 18px 18px;
 }
 
 .workspace-panel {
@@ -373,25 +376,25 @@ input {
 }
 
 .workspace-input {
-  padding: 16px 14px;
+  padding: 14px;
 }
 
 .workspace-output {
-  padding: 22px;
+  padding: 14px;
   display: grid;
-  gap: 18px;
+  gap: 12px;
 }
 
 .form-stack {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .tab-row {
   display: flex;
   gap: 22px;
-  margin-bottom: 14px;
-  padding: 0 6px;
+  margin-bottom: 10px;
+  padding: 0;
 }
 
 .tab-chip {
@@ -414,7 +417,7 @@ input {
 .select-field,
 .text-area {
   width: 100%;
-  padding: 9px 12px;
+  padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid var(--line);
   background: var(--field);
@@ -424,7 +427,7 @@ input {
 }
 
 .text-area {
-  min-height: 180px;
+  min-height: 250px;
   resize: vertical;
   font-family: "Consolas", "Courier New", monospace;
   line-height: 1.35;
@@ -441,8 +444,8 @@ input {
 .toggle-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 6px 8px;
   border-radius: 8px;
   background: var(--panel-soft);
   border: 1px solid var(--line);
@@ -451,12 +454,12 @@ input {
 
 .radio-grid {
   grid-template-columns: 1fr;
-  gap: 6px;
+  gap: 4px;
 }
 
 .toggle-row {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
 }
 
 .double-field {
@@ -476,7 +479,7 @@ input {
 }
 
 .output-card {
-  padding: 22px;
+  padding: 14px;
   border-radius: var(--radius);
   background: var(--panel);
   border: 1px solid var(--line);
@@ -487,13 +490,13 @@ input {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 10px;
 }
 
 .panel-heading h2 {
-  margin: 8px 0 0;
-  font-size: 1.35rem;
+  margin: 6px 0 0;
+  font-size: 1.05rem;
 }
 
 .template-pill {
@@ -508,13 +511,13 @@ input {
 .readout,
 .output-pre {
   margin: 0;
-  padding: 16px 18px;
-  border-radius: 18px;
+  padding: 12px 14px;
+  border-radius: 8px;
   background: var(--field);
   color: var(--ink);
   font-family: "Courier New", monospace;
-  font-size: 0.92rem;
-  line-height: 1.6;
+  font-size: 0.9rem;
+  line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
   border: 1px solid var(--line);
@@ -522,9 +525,9 @@ input {
 }
 
 .email-preview {
-  min-height: 280px;
-  padding: 18px 20px;
-  border-radius: 18px;
+  min-height: 620px;
+  padding: 14px 16px;
+  border-radius: 8px;
   border: 1px solid #d1d5db;
   background: #ffffff;
   color: #000000;
@@ -535,22 +538,27 @@ input {
 }
 
 .workspace-input .button-row {
-  gap: 10px;
+  gap: 8px;
 }
 
 .workspace-input .button,
 .workspace-input .button-ghost {
-  min-width: 90px;
-  padding: 7px 18px;
-  font-size: 0.95rem;
+  min-width: 88px;
+  padding: 6px 14px;
+  font-size: 0.9rem;
+}
+
+.subject-card .readout {
+  min-height: 44px;
+}
+
+.email-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
 }
 
 .email-preview strong {
   font-weight: 700;
-}
-
-.compact-pre {
-  min-height: 160px;
 }
 
 @media (max-width: 900px) {
@@ -576,5 +584,9 @@ input {
   .generator-topbar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .email-preview {
+    min-height: 360px;
   }
 }
