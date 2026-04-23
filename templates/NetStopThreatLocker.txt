@@ -1,0 +1,22 @@
+Greetings,
+
+ThreatLocker MDR has identified activity consistent with an attempt to stop the ThreatLocker service on {{AssetName}} within {{epOrg}} on {{epDate}}(EST).
+
+Detection Details:
+- Detected Time: {{epDetectedTimeEst}}
+- Endpoint: {{AssetName}}
+- User Account: {{epUser}}
+- Process Path: {{epProcesspath}}
+- Full Path: {{epFullpath}}
+- Command Line: {{epCmdline}}
+
+Action Taken: {{ResponseAction}}
+
+{{MaintenanceStatus}}
+The action failed as Tamper Protection is still enabled. {{ResponseFooter}}
+
+Please review this activity and confirm whether this behavior was expected and authorized on this device.
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

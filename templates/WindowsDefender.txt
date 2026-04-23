@@ -1,0 +1,19 @@
+Greetings,
+
+ThreatLocker MDR has identified activity consistent with Microsoft Defender being disabled on {{AssetName}} within {{epOrg}} on {{epDate}}(EST).
+
+Detection Details:
+- Detected Time: {{epDetectedTimeEst}}
+- User: {{epUser}}
+- Configuration Changed: {{epDefenderType2}}
+
+Action Taken: {{ResponseAction}}
+
+{{MaintenanceStatus}}
+{{ResponseFooter}}
+
+Please review this event and confirm whether disabling Microsoft Defender was expected and authorized on this device.
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

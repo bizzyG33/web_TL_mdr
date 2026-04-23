@@ -1,0 +1,17 @@
+Greetings,
+
+Microsoft Defender has identified a configuration change involving an exclusion on {{AssetName}} within {{epOrg}} on {{epDate}}(EST).
+
+Detection Details:
+- User: {{UserPrincipalName}}
+- Detected Time: {{epDetectedTimeEst}}
+- New Value: {{epDefenderExclusionNewValue}}
+
+Action Taken: {{ResponseAction}}
+
+{{MaintenanceStatus}}
+{{ResponseFooter}}
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

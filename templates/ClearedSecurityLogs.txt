@@ -1,0 +1,17 @@
+Greetings,
+
+ThreatLocker MDR has identified activity consistent with security or event logs being cleared on {{AssetName}} within {{epOrg}} on {{epDate}}(EST).
+
+Detection Details:
+- Detected Time: {{epDetectedTimeEst}}
+- User: {{UserDisplayName}}
+- Log Name: {{epLogname}}
+
+Action Taken: {{ResponseAction}}
+
+{{MaintenanceStatus}}
+{{ResponseFooter}}
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

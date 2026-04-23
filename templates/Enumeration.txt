@@ -1,0 +1,22 @@
+Greetings,
+
+ThreatLocker MDR has identified activity consistent with system or network enumeration on {{AssetName}} within {{epOrg}} on {{epDate}}(EST).
+
+Detection Details:
+- Detected Time: {{epDetectedTimeEst}}
+- Endpoint: {{AssetName}}
+- User Account: {{epUser}}
+- Process Path: {{epProcesspath}}
+- Full Path: {{epFullpath}}
+- Command Line: {{epCmdline}}
+
+Action Taken: {{ResponseAction}}
+
+{{MaintenanceStatus}}
+{{ResponseFooter}}
+
+Please review this activity and confirm whether this enumeration behavior was expected and authorized on this device.
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

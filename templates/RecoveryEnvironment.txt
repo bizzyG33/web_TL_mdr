@@ -1,0 +1,28 @@
+Greetings,
+
+ThreatLocker MDR has identified activity consistent with the Windows Recovery Environment being disabled on {{AssetName}} within {{epOrg}} on {{epDate}}(EST).
+
+Detection Details:
+- Endpoint: {{AssetName}}
+- Domain: {{epDomain}}
+- User Account: {{epUser}}
+- Application: {{epApplicationname}}
+- Detected Time: {{epDetectedTimeEst}}
+
+Execution Context:
+- Process Path: {{epProcesspath}}
+- Full Path: {{epFullpath}}
+- Command Line: {{epCmdline}}
+- Process ID: {{epProcessid}}
+- File Hash (SHA256): {{epSha256}}
+
+Action Taken: {{ResponseAction}}
+
+{{MaintenanceStatus}}
+{{ResponseFooter}}
+
+Please review this event and confirm whether disabling the Windows Recovery Environment was expected and authorized on this device.
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

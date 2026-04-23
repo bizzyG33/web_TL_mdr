@@ -1,0 +1,16 @@
+Greetings,
+
+This email is in regard to a Response Center alert from Threatlocker. At approximately {{FirstLoginTimeUtc}}, we received an alert from the Microsoft 365 account address: {{UserPrincipalName}}  with the account name: {{UserDisplayName}} for the TL.CD.090 - ThreatLocker Impossible Travel policy. At this time, the user logged in from two geographical distinct locations within an impossible time period. The first login originated from the IP {{Ip1}} which traces back to {{Ip1Location}} from {{Ip1isp}}.The second login originated from the IP {{Ip2}} which traces back to {{Ip2Location}} from {{Ip2isp}}. 
+
+Detection Details:
+- First Login Time: {{FirstLoginTimeUtc}}
+- Second Login Time: {{SecondLoginTimeUtc}}
+
+First IP {{Ip1}}-  {{Ip1VirusTotalAttackHistory}}
+Second IP {{Ip2}}-  {{Ip2VirusTotalAttackHistory}}
+
+{{ResponseFooter}}
+
+Further information and the full event log can be located in the ThreatLocker Response Center under the Threats tab in the upper right, via the Cleared filter in the drop-down menu. If you have any questions or concerns, please reach out to ThreatLocker Support via our LiveChat.
+
+{{Signature}}

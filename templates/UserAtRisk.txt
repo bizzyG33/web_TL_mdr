@@ -1,0 +1,29 @@
+Greetings,
+
+Microsoft has identified a user at risk alert associated with one of your user accounts.
+
+Detection Details:
+- User: {{UserDisplayName}}
+- UPN: {{UserPrincipalName}}
+- User ID: {{UserId}}
+- Risk Event Type: {{RiskEventType}}
+- Risk Level: {{RiskLevel}}
+- Risk State: {{RiskState}}
+- Risk Detail: {{RiskDetail}}
+- Activity: {{Activity}}
+- Detected Time: {{DetectedTimeUtc}}
+- Last Updated: {{LastUpdatedTimeUtc}}
+- Observed IP: {{Ip1}}
+- Location: {{Ip1Location}}
+- AbuseIPDB Summary: {{Ip1AbuseSummary}}
+- VirusTotal Verdict: {{Ip1VirusTotalVerdict}}
+- Request ID: {{RequestId}}
+- Correlation ID: {{CorrelationId}}
+
+Action Taken: {{ResponseAction}}
+
+{{ResponseFooter}}
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

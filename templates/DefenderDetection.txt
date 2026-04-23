@@ -1,0 +1,18 @@
+Greetings,
+
+Microsoft Defender Antivirus has identified a potential security threat on one of your endpoints. The detection in this case is a Defender detection of {{epDefenderType1}} for {{epOrg}} on endpoint {{AssetName}} on {{epDate}}(EST).
+Detection Details:
+- Endpoint: {{AssetName}}
+- User: {{epUser}}
+- Malware Family: {{epDefenderType1}}:{{epDefenderType2}}
+- Detected Time: {{epDetectedTimeEst}}
+- Action Taken: {{epDefenderaction}}
+- File Path: {{epDefenderfile}}
+- Process Path: {{epDefenderpath}}
+
+{{MaintenanceStatus}}
+{{ResponseFooter}}
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

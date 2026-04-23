@@ -1,0 +1,23 @@
+Greetings,
+
+Microsoft has identified a login to disabled account alert involving one of your user accounts.
+
+Detection Details:
+- User: {{UserDisplayName}}
+- UPN: {{UserPrincipalName}}
+- Activity: {{Activity}}
+- Detected Time: {{DetectedTimeUtc}}
+- Observed IP: {{Ip1}}
+- Location: {{Ip1Location}}
+- AbuseIPDB Summary: {{Ip1AbuseSummary}}
+- VirusTotal Verdict: {{Ip1VirusTotalVerdict}}
+
+Action Taken: {{ResponseAction}}
+
+{{ResponseFooter}}
+
+This account arrived in a locked state and can currently be unlocked through the Entra portal. If this login attempt was not authorized, we recommend validating the activity with the user and confirming that any active session tokens are withdrawn.
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

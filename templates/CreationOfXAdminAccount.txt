@@ -1,0 +1,21 @@
+Greetings,
+
+Microsoft has identified activity consistent with privileged group membership being granted to an administrative account within {{epOrg}} on endpoint {{AssetName}}.
+
+Detection Details:
+- Admin Tier Added: {{epAdmingroupname}}
+- Added Member: {{epAddedmembername}}
+- Initiating User: {{UserDisplayName}}                         
+- Event ID: {{epEventlogsourceid}}
+- Activity: {{Activity}}
+- Source: {{Source}}
+- Detected Time: {{epDetectedTimeEst}}
+
+Action Taken: {{ResponseAction}}
+
+{{MaintenanceStatus}}
+{{ResponseFooter}}
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

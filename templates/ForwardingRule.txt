@@ -1,0 +1,19 @@
+Greetings,
+
+ThreatLocker MDR has identified a new email forwarding rule created within your environment.
+
+Detection Details:
+- User: {{UserId}}
+- Activity Time: {{ActivityTimeUtc}}
+- Client IP: {{Ip1}}
+- Forwarding Address: {{ForwardingAddress}}
+
+Action Taken: {{ResponseAction}}
+
+{{ResponseFooter}}
+
+Please review this event and confirm whether this forwarding rule was expected and authorized.
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

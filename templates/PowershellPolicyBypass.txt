@@ -1,0 +1,31 @@
+Greetings,
+
+ThreatLocker MDR has identified a PowerShell execution policy bypass event on {{AssetName}} within {{epOrg}} on {{epDate}}(EST). The use of the `-ExecutionPolicy Bypass` flag can be legitimate in some development or deployment workflows, but it can also indicate an attempt to execute unauthorized scripts.
+
+Detection Details:
+- Endpoint: {{AssetName}}
+- Domain: {{epDomain}}
+- User Account: {{epUser}}
+- Application: {{epApplicationname}}
+- Detected Time: {{epDetectedTimeEst}}
+
+Technical Summary:
+The bypass was observed during the execution of a PowerShell script. While this is common in development workflows to allow for script testing and module loading, it effectively circumvents the security controls set by your organization's script execution policies.
+
+Execution Context:
+- Process Path: {{epProcesspath}}
+- Full Path: {{epFullpath}}
+- Command Line: {{epCmdline}}
+- Process ID: {{epProcessid}}
+- File Hash (SHA256): {{epSha256}}
+
+Action Taken: {{ResponseAction}}
+
+{{MaintenanceStatus}}
+{{ResponseFooter}}
+
+We are notifying you of this event to ensure it aligns with your standard administrative or developer workflows. If this activity was not initiated by the user or is not consistent with their normal duties, further investigation may be required.
+
+If you have any questions or require further technical details, please do not hesitate to reach out to the ThreatLocker MDR Team.
+
+{{Signature}}

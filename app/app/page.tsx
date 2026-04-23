@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isAllowedEmail } from "@/lib/domain";
 
 async function loadTemplates() {
-  const templatesDir = path.join(process.cwd(), "..", "Templates");
+  const templatesDir = path.join(process.cwd(), "templates");
   const entries = await fs.readdir(templatesDir, { withFileTypes: true });
   const templateFiles = entries.filter((entry) => entry.isFile() && entry.name.endsWith(".txt"));
   const templates = await Promise.all(
