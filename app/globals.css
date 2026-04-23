@@ -445,7 +445,6 @@ input {
   display: flex;
   align-items: center;
   gap: 8px;
-  justify-content: flex-start;
   padding: 10px 12px;
   border-radius: 8px;
   background: var(--panel-soft);
@@ -485,11 +484,26 @@ input {
 
 .choice-card {
   min-height: 44px;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.choice-card input {
+  flex: 0 0 auto;
 }
 
 .choice-card span {
-  flex: 1;
+  flex: 0 1 auto;
   font-weight: 600;
+  text-align: left;
+  max-width: 220px;
+}
+
+.radio-grid .choice-card {
+  grid-template-columns: 18px minmax(0, 1fr);
+  display: grid;
+  justify-content: start;
+  align-content: center;
 }
 
 .toggle-card {

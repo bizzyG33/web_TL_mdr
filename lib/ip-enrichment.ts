@@ -278,7 +278,7 @@ async function fetchProxyCheck(ipAddress: string, apiKey: string) {
     region: toString(ipData.region),
     regionCode: toString(ipData.regioncode) || toString(ipData.region),
     city: toString(ipData.city),
-    provider: toString(ipData.provider),
+    provider: normalizeProviderName(toString(ipData.provider)),
     vpnStatus: proxy
       ? type
         ? `Proxy/VPN detected (${type})`
@@ -323,7 +323,7 @@ async function fetchIpInfo(ipAddress: string) {
     city: safeTrim(payload.city),
     region: safeTrim(payload.region),
     country: safeTrim(payload.country),
-    org: safeTrim(payload.org)
+    org: normalizeProviderName(safeTrim(payload.org))
   };
 }
 
@@ -349,6 +349,15 @@ function chooseBetterProviderValue(current: string | undefined, fallback: string
   }
 
   return current;
+}
+
+function normalizeProviderName(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  return trimmed.replace(/^AS\d+\s+/i, "");
 }
 
 function isUnavailableValue(value: string): boolean {
