@@ -58,6 +58,9 @@ export type GeneratorInput = {
   alertDisplayName: string;
   templateFileName: string;
   templates: TemplateMap;
+  signerEmail: string;
+  ip1EnrichmentOverride?: Partial<IpEnrichmentResult>;
+  ip2EnrichmentOverride?: Partial<IpEnrichmentResult>;
   responseAction: ResponseAction;
   logText: string;
   organization: string;
@@ -182,6 +185,7 @@ export type GenerationOutput = {
   statusMessage: string;
   subject: string;
   body: string;
+  bodyHtml: string;
   summaryBullets: string;
   clearReasoningStarter: string;
   validationSummary: string;
@@ -189,7 +193,6 @@ export type GenerationOutput = {
   parsedLog: ParsedAlertLog;
 };
 
-const DEFAULT_SIGNATURE = "Regards,\nThreatLocker MDR Team";
 const RUNBOOK_BLURB =
   "We recommend updating the runbook for this organization. Having an up-to-date runbook significantly enhances our response time and quality of communication for critical alerts.";
 const EXCLUSION_BLURB = "An exclusion has been added for this detection.";
@@ -291,6 +294,9 @@ export function generateEmail(input: GeneratorInput): GenerationOutput {
   );
   const ip1 = buildIpEnrichment(parsedLog, "ip1", input.alertType);
   const ip2 = buildIpEnrichment(parsedLog, "ip2", input.alertType);
+  const finalIp1 = applyIpEnrichmentOverride(ip1, input.ip1EnrichmentOverride);
+  const finalIp2 = applyIpEnrichmentOverride(ip2, input.ip2EnrichmentOverride);
+  const replacements = buildReplacementMap(input, parsedLog, finalIp1, finalIp2);
   const subject = buildGeneratedEmailSubject(
     input.tab,
     input.alertDisplayName,
@@ -298,7 +304,8 @@ export function generateEmail(input: GeneratorInput): GenerationOutput {
     input.hostname,
     parsedLog.assetName
   );
-  const body = fillTemplate(template, buildReplacementMap(input, parsedLog, ip1, ip2));
+  const body = fillTemplate(template, replacements);
+  const bodyHtml = composeHtml(template, replacements);
   const validationSummary = buildValidationSummary(parsedLog, input.alertType);
   const hasWarnings =
     validationSummary !== "No validation issues detected." &&
@@ -311,7 +318,8 @@ export function generateEmail(input: GeneratorInput): GenerationOutput {
       : `Generation complete. Action: ${toDisplayText(input.responseAction)}`,
     subject,
     body,
-    summaryBullets: buildSummaryBullets(parsedLog, ip1, ip2, input),
+    bodyHtml,
+    summaryBullets: buildSummaryBullets(parsedLog, finalIp1, finalIp2, input),
     clearReasoningStarter,
     validationSummary,
     templateFileName,
@@ -341,6 +349,7 @@ function buildReplacementMap(
   ip2: IpEnrichmentResult
 ): Record<string, string> {
   const finalAssetName = firstNonEmpty(input.hostname, parsed.assetName);
+  const signerName = buildSignatureNameFromEmail(input.signerEmail);
   const maintenanceStatus = input.isSecureMode
     ? "This device is currently in Secure Mode."
     : input.isLearningMonitorMode
@@ -423,7 +432,7 @@ function buildReplacementMap(
       input.includeExclusionAdded,
       input.includeEscalation
     ),
-    "{{signature}}": DEFAULT_SIGNATURE,
+    "{{signature}}": signerName,
     "{{runbookblurb}}": input.includeRunbookBlurb ? RUNBOOK_BLURB : "",
     "{{exclusionaddedblurb}}": input.includeExclusionAdded ? EXCLUSION_BLURB : "",
     "{{maintenancestatus}}": maintenanceStatus,
@@ -469,7 +478,76 @@ function buildReplacementMap(
   return replacements;
 }
 
-function parseAlertLog(logText: string): ParsedAlertLog {
+function applyIpEnrichmentOverride(
+  base: IpEnrichmentResult,
+  override?: Partial<IpEnrichmentResult>
+): IpEnrichmentResult {
+  if (!override) {
+    return base;
+  }
+
+  const merged: IpEnrichmentResult = {
+    ...base,
+    ...override
+  };
+
+  merged.locationDisplay = buildLocationDisplay(merged.city, merged.regionCode, merged.country);
+  return merged;
+}
+
+function composeHtml(template: string, replacements: Record<string, string>): string {
+  const lines = template.replace(/\r\n/g, "\n").split("\n");
+  const html = lines
+    .map((line) => {
+      if (!line.trim()) {
+        return '<div style="margin:0; line-height:1.5;"><br></div>';
+      }
+
+      return `<div style="margin:0; line-height:1.5; color:#000000; background:transparent;">${replaceLineTokensWithHtml(line, replacements)}</div>`;
+    })
+    .join("");
+
+  return html;
+}
+
+function replaceLineTokensWithHtml(line: string, replacements: Record<string, string>): string {
+  let position = 0;
+  let output = "";
+
+  while (position < line.length) {
+    const tokenStart = line.indexOf("{{", position);
+
+    if (tokenStart < 0) {
+      output += escapeHtml(line.slice(position));
+      break;
+    }
+
+    if (tokenStart > position) {
+      output += escapeHtml(line.slice(position, tokenStart));
+    }
+
+    const tokenEnd = line.indexOf("}}", tokenStart);
+    if (tokenEnd < 0) {
+      output += escapeHtml(line.slice(tokenStart));
+      break;
+    }
+
+    const token = line.slice(tokenStart, tokenEnd + 2);
+    const normalized = token.toLowerCase();
+
+    if (normalized in replacements) {
+      output += `<strong>${escapeHtmlWithBreaks(replacements[normalized] || "N/A")}</strong>`;
+    } else {
+      output += escapeHtml(token);
+    }
+
+    position = tokenEnd + 2;
+  }
+
+  return output;
+}
+
+export function parseAlertLog(logText: string): ParsedAlertLog {
   const lines = logText.split(/\r?\n/);
   const rawFields: Record<string, string> = {};
 
@@ -1033,6 +1111,38 @@ function normalizeCertificate(value: string): string {
 
   const match = value.match(/(?:CN|cn)=([^,]+)/);
   return match?.[1]?.trim() ?? value.trim();
+}
+
+function buildSignatureNameFromEmail(email: string): string {
+  const localPart = email.trim().toLowerCase().split("@")[0] ?? "";
+  const words = localPart
+    .split(/[._-]+/)
+    .map((word) => word.trim())
+    .filter(Boolean);
+
+  if (words.length === 0) {
+    return "ThreatLocker MDR";
+  }
+
+  return words
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function escapeHtmlWithBreaks(value: string): string {
+  return value
+    .split(/\r?\n/)
+    .map((line) => escapeHtml(line))
+    .join("<br>");
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function extractNamedField(text: string, fieldName: string): string {

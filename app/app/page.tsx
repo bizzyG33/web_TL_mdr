@@ -1,24 +1,9 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { redirect } from "next/navigation";
 import { EmailAlertGeneratorApp } from "@/components/email-alert-generator-app";
 import { SignOutButton } from "@/components/sign-out-button";
 import { createClient } from "@/lib/supabase/server";
+import { ensureCurrentUserInstance, hasRequiredApiKeys } from "@/lib/user-instance";
 import { isAllowedEmail } from "@/lib/domain";
-
-async function loadTemplates() {
-  const templatesDir = path.join(process.cwd(), "templates");
-  const entries = await fs.readdir(templatesDir, { withFileTypes: true });
-  const templateFiles = entries.filter((entry) => entry.isFile() && entry.name.endsWith(".txt"));
-  const templates = await Promise.all(
-    templateFiles.map(async (entry) => {
-      const content = await fs.readFile(path.join(templatesDir, entry.name), "utf8");
-      return [entry.name, content] as const;
-    })
-  );
-
-  return Object.fromEntries(templates);
-}
 
 export default async function AppPage() {
   const supabase = await createClient();
@@ -35,14 +20,17 @@ export default async function AppPage() {
     redirect("/auth/check");
   }
 
-  const templates = await loadTemplates();
+  const { instance } = await ensureCurrentUserInstance();
+  if (!hasRequiredApiKeys(instance?.settings)) {
+    redirect("/setup/api-keys");
+  }
 
   return (
     <>
       <div className="app-toolbar">
         <SignOutButton />
       </div>
-      <EmailAlertGeneratorApp templates={templates} userEmail={user.email} />
+      <EmailAlertGeneratorApp userEmail={user.email} />
     </>
   );
 }

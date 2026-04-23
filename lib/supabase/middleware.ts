@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PATHS = ["/app", "/auth/check"];
+const PROTECTED_PATHS = ["/app", "/auth/check", "/setup"];
 type ResponseCookieOptions = Parameters<ReturnType<typeof NextResponse.next>["cookies"]["set"]>[2];
 type CookieBatch = Array<{ name: string; value: string; options?: ResponseCookieOptions }>;
 

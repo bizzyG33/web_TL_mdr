@@ -5,12 +5,11 @@ import {
   DEFAULT_SPECIFIC_DISABLEMENT,
   type AlertOption,
   type AppTab,
+  type GenerationOutput,
   type SpecificDisablement,
-  type TemplateMap,
   cloudAlertOptions,
   defenderActionOptions,
   endpointAlertOptions,
-  generateEmail,
   getDefaultDefenderAction,
   getDefaultResponseAction,
   getDefaultSentinelAction,
@@ -20,13 +19,12 @@ import {
 } from "@/lib/email-alert-generator";
 
 type Props = {
-  templates: TemplateMap;
   userEmail: string;
 };
 
-type GenerationState = ReturnType<typeof generateEmail> | null;
+type GenerationState = GenerationOutput | null;
 
-export function EmailAlertGeneratorApp({ templates, userEmail }: Props) {
+export function EmailAlertGeneratorApp({ userEmail }: Props) {
   const [tab, setTab] = useState<AppTab>("cloud");
   const [selectedAlert, setSelectedAlert] = useState<AlertOption>(cloudAlertOptions[0]);
   const [responseAction, setResponseAction] = useState(getDefaultResponseAction());
@@ -62,7 +60,7 @@ export function EmailAlertGeneratorApp({ templates, userEmail }: Props) {
     setGeneration(null);
   }
 
-  function handleGenerate() {
+  async function handleGenerate() {
     if (!logText.trim()) {
       setStatusMessage("Paste the event log before generating.");
       return;
@@ -73,28 +71,41 @@ export function EmailAlertGeneratorApp({ templates, userEmail }: Props) {
       return;
     }
 
-    const output = generateEmail({
-      tab,
-      alertType: selectedAlert.alertType,
-      alertDisplayName: selectedAlert.displayName,
-      templateFileName: selectedAlert.templateFileName,
-      templates,
-      responseAction,
-      logText,
-      organization,
-      hostname,
-      includeRunbookBlurb,
-      includeExclusionAdded,
-      includeEscalation,
-      isSecureMode,
-      isLearningMonitorMode,
-      defenderAction,
-      sentinelOneAction,
-      specificDisablement
+    setStatusMessage("Generating email...");
+
+    const response = await fetch("/api/generate-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        tab,
+        alertType: selectedAlert.alertType,
+        alertDisplayName: selectedAlert.displayName,
+        templateFileName: selectedAlert.templateFileName,
+        responseAction,
+        logText,
+        organization,
+        hostname,
+        includeRunbookBlurb,
+        includeExclusionAdded,
+        includeEscalation,
+        isSecureMode,
+        isLearningMonitorMode,
+        defenderAction,
+        sentinelOneAction,
+        specificDisablement
+      })
     });
 
-    setGeneration(output);
-    setStatusMessage(output.statusMessage);
+    const payload = (await response.json()) as GenerationOutput & { error?: string };
+    if (!response.ok) {
+      setStatusMessage(payload.error ?? "Unable to generate email.");
+      return;
+    }
+
+    setGeneration(payload);
+    setStatusMessage(payload.statusMessage);
     setLogText("");
     setHostname("");
   }
@@ -113,6 +124,26 @@ export function EmailAlertGeneratorApp({ templates, userEmail }: Props) {
 
     await navigator.clipboard.writeText(value);
     setStatusMessage(successMessage);
+  }
+
+  async function copyEmailHtml(html: string, text: string, successMessage: string) {
+    if (!html.trim() || !text.trim()) {
+      return;
+    }
+
+    if (typeof ClipboardItem !== "undefined" && navigator.clipboard.write) {
+      const item = new ClipboardItem({
+        "text/html": new Blob([html], { type: "text/html" }),
+        "text/plain": new Blob([text], { type: "text/plain" })
+      });
+
+      await navigator.clipboard.write([item]);
+      setStatusMessage(successMessage);
+      return;
+    }
+
+    await navigator.clipboard.writeText(text);
+    setStatusMessage(`${successMessage} Plain text fallback used.`);
   }
 
   return (
@@ -367,19 +398,30 @@ export function EmailAlertGeneratorApp({ templates, userEmail }: Props) {
             <div className="panel-heading">
               <div>
                 <span className="eyebrow">Email</span>
-                <h2>Generated Body</h2>
+                <h2>Generated HTML Email</h2>
               </div>
               <button
                 className="button-ghost"
                 type="button"
                 onClick={() =>
-                  copyText(generation?.body ?? "", "Generated body copied to clipboard.")
+                  copyEmailHtml(
+                    generation?.bodyHtml ?? "",
+                    generation?.body ?? "",
+                    "Generated HTML email copied to clipboard."
+                  )
                 }
               >
-                Copy
+                Copy HTML
               </button>
             </div>
-            <pre className="output-pre">{generation?.body ?? "Generate an email to preview it here."}</pre>
+            <div
+              className="email-preview"
+              dangerouslySetInnerHTML={{
+                __html:
+                  generation?.bodyHtml ??
+                  '<div style="margin:0; line-height:1.5; color:#000000;"><strong>No preview available.</strong></div>'
+              }}
+            />
           </div>
 
           <div className="output-grid">
