@@ -251,7 +251,7 @@ async function fetchVirusTotal(ipAddress: string, apiKey: string) {
 
 async function fetchProxyCheck(ipAddress: string, apiKey: string) {
   const response = await fetch(
-    `https://proxycheck.io/v3/${encodeURIComponent(ipAddress)}?key=${encodeURIComponent(apiKey)}&vpn=1&asn=1&risk=1`,
+    `https://proxycheck.io/v2/${encodeURIComponent(ipAddress)}?key=${encodeURIComponent(apiKey)}&vpn=3&asn=1&risk=1`,
     {
       cache: "no-store"
     }
@@ -268,21 +268,29 @@ async function fetchProxyCheck(ipAddress: string, apiKey: string) {
     return undefined;
   }
 
-  const proxy = toString(ipData.proxy)?.toLowerCase() === "yes";
+  const proxy = toString(ipData.proxy).toLowerCase() === "yes";
+  const vpn = toString(ipData.vpn).toLowerCase() === "yes";
   const type = toString(ipData.type);
   const risk = toString(ipData.risk);
   const attackHistory = toString(ipData.attack_history);
+  const provider = normalizeProviderName(
+    toString(ipData.provider) || toString(ipData.isp) || toString(ipData.organisation)
+  );
 
   return {
     country: toString(ipData.country),
     region: toString(ipData.region),
     regionCode: toString(ipData.regioncode) || toString(ipData.region),
     city: toString(ipData.city),
-    provider: normalizeProviderName(toString(ipData.provider)),
-    vpnStatus: proxy
+    provider,
+    vpnStatus: proxy || vpn
       ? type
         ? `Proxy/VPN detected (${type})`
-        : "Proxy/VPN detected"
+        : proxy && vpn
+          ? "Proxy and VPN detected"
+          : proxy
+            ? "Proxy detected"
+            : "VPN detected"
       : "No proxy/VPN detected",
     attackHistory: attackHistory
       ? `Proxycheck risk: ${risk || "N/A"}, Attack history: ${attackHistory}`

@@ -384,6 +384,8 @@ input {
   padding: 14px;
   display: grid;
   gap: 12px;
+  align-content: start;
+  align-items: start;
 }
 
 .form-stack {
@@ -600,6 +602,7 @@ input {
 
 .subject-card {
   display: block;
+  align-self: start;
 }
 
 .email-card {
