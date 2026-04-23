@@ -193,6 +193,8 @@ export type GenerationOutput = {
   parsedLog: ParsedAlertLog;
 };
 
+const HTML_SIGNATURE_TEMPLATE_NAME = "HtmlSignature.html";
+
 const RUNBOOK_BLURB =
   "We recommend updating the runbook for this organization. Having an up-to-date runbook significantly enhances our response time and quality of communication for critical alerts.";
 const EXCLUSION_BLURB = "An exclusion has been added for this detection.";
@@ -296,7 +298,9 @@ export function generateEmail(input: GeneratorInput): GenerationOutput {
   const ip2 = buildIpEnrichment(parsedLog, "ip2", input.alertType);
   const finalIp1 = applyIpEnrichmentOverride(ip1, input.ip1EnrichmentOverride);
   const finalIp2 = applyIpEnrichmentOverride(ip2, input.ip2EnrichmentOverride);
-  const replacements = buildReplacementMap(input, parsedLog, finalIp1, finalIp2);
+  const signerName = buildSignatureNameFromEmail(input.signerEmail);
+  const replacements = buildReplacementMap(input, parsedLog, finalIp1, finalIp2, signerName);
+  const htmlReplacements = buildHtmlReplacementMap(input, replacements, signerName);
   const subject = buildGeneratedEmailSubject(
     input.tab,
     input.alertDisplayName,
@@ -305,7 +309,7 @@ export function generateEmail(input: GeneratorInput): GenerationOutput {
     parsedLog.assetName
   );
   const body = fillTemplate(template, replacements);
-  const bodyHtml = composeHtml(template, replacements);
+  const bodyHtml = composeHtml(template, htmlReplacements);
   const validationSummary = buildValidationSummary(parsedLog, input.alertType);
   const hasWarnings =
     validationSummary !== "No validation issues detected." &&
@@ -346,10 +350,10 @@ function buildReplacementMap(
   input: GeneratorInput,
   parsed: ParsedAlertLog,
   ip1: IpEnrichmentResult,
-  ip2: IpEnrichmentResult
+  ip2: IpEnrichmentResult,
+  signerName: string
 ): Record<string, string> {
   const finalAssetName = firstNonEmpty(input.hostname, parsed.assetName);
-  const signerName = buildSignatureNameFromEmail(input.signerEmail);
   const maintenanceStatus = input.isSecureMode
     ? "This device is currently in Secure Mode."
     : input.isLearningMonitorMode
@@ -432,7 +436,8 @@ function buildReplacementMap(
       input.includeExclusionAdded,
       input.includeEscalation
     ),
-    "{{signature}}": signerName,
+    "{{signature}}": buildPlainTextSignature(signerName),
+    "{{signaturename}}": signerName,
     "{{runbookblurb}}": input.includeRunbookBlurb ? RUNBOOK_BLURB : "",
     "{{exclusionaddedblurb}}": input.includeExclusionAdded ? EXCLUSION_BLURB : "",
     "{{maintenancestatus}}": maintenanceStatus,
@@ -478,6 +483,21 @@ function buildReplacementMap(
   return replacements;
 }
 
+function buildHtmlReplacementMap(
+  input: GeneratorInput,
+  baseReplacements: Record<string, string>,
+  signerName: string
+): Record<string, string> {
+  const htmlSignatureTemplate = input.templates[HTML_SIGNATURE_TEMPLATE_NAME] ?? "";
+
+  return {
+    ...baseReplacements,
+    "{{signature}}": htmlSignatureTemplate
+      ? htmlSignatureTemplate.replaceAll("===NAME===", escapeHtml(signerName))
+      : escapeHtmlWithBreaks(baseReplacements["{{signature}}"] ?? signerName)
+  };
+}
+
 function applyIpEnrichmentOverride(
   base: IpEnrichmentResult,
   override?: Partial<IpEnrichmentResult>
@@ -486,9 +506,13 @@ function applyIpEnrichmentOverride(
     return base;
   }
 
+  const sanitizedOverride = Object.fromEntries(
+    Object.entries(override).filter(([, value]) => value !== undefined)
+  ) as Partial<IpEnrichmentResult>;
+
   const merged: IpEnrichmentResult = {
     ...base,
-    ...override
+    ...sanitizedOverride
   };
 
   merged.locationDisplay = buildLocationDisplay(merged.city, merged.regionCode, merged.country);
@@ -536,7 +560,11 @@ function replaceLineTokensWithHtml(line: string, replacements: Record<string, st
     const normalized = token.toLowerCase();
 
     if (normalized in replacements) {
-      output += `<strong>${escapeHtmlWithBreaks(replacements[normalized] || "N/A")}</strong>`;
+      if (normalized === "{{signature}}") {
+        output += replacements[normalized] || "";
+      } else {
+        output += `<strong>${escapeHtmlWithBreaks(replacements[normalized] || "N/A")}</strong>`;
+      }
     } else {
       output += escapeHtml(token);
     }
@@ -1096,7 +1124,7 @@ function buildLocationDisplay(city: string, regionCode: string, country: string)
 }
 
 function cleanLocationPart(value: string): string {
-  const trimmed = value.trim();
+  const trimmed = safeTrim(value);
   if (!trimmed || trimmed === "Unknown" || trimmed === "Unavailable") {
     return "";
   }
@@ -1105,16 +1133,16 @@ function cleanLocationPart(value: string): string {
 }
 
 function normalizeCertificate(value: string): string {
-  if (!value.trim()) {
+  if (!safeTrim(value)) {
     return "";
   }
 
   const match = value.match(/(?:CN|cn)=([^,]+)/);
-  return match?.[1]?.trim() ?? value.trim();
+  return match?.[1]?.trim() ?? safeTrim(value);
 }
 
 function buildSignatureNameFromEmail(email: string): string {
-  const localPart = email.trim().toLowerCase().split("@")[0] ?? "";
+  const localPart = safeTrim(email).toLowerCase().split("@")[0] ?? "";
   const words = localPart
     .split(/[._-]+/)
     .map((word) => word.trim())
@@ -1127,6 +1155,16 @@ function buildSignatureNameFromEmail(email: string): string {
   return words
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function buildPlainTextSignature(signerName: string): string {
+  return [
+    signerName,
+    "ThreatLocker MDR",
+    "Managed Detection & Response",
+    "soc@yourdomain.com",
+    "www.threatlocker.com"
+  ].join("\n");
 }
 
 function escapeHtmlWithBreaks(value: string): string {
@@ -1152,7 +1190,7 @@ function extractNamedField(text: string, fieldName: string): string {
 }
 
 function stripSentinelPrefixes(value: string): string {
-  return value.replace(/^(?:file|containerfile):_+/i, "").trim();
+  return (value ?? "").replace(/^(?:file|containerfile):_+/i, "").trim();
 }
 
 function extractFirstIp(text: string): string {
@@ -1166,27 +1204,28 @@ function extractFirstIp(text: string): string {
 
 function splitOnFirst(value: string, separator: string): [string, string] {
   if (!value.includes(separator)) {
-    return [value.trim(), ""];
+    return [safeTrim(value), ""];
   }
 
   const index = value.indexOf(separator);
-  return [value.slice(0, index).trim(), value.slice(index + separator.length).trim()];
+  return [safeTrim(value.slice(0, index)), safeTrim(value.slice(index + separator.length))];
 }
 
 function safe(...values: string[]): string {
-  return values.find((value) => value.trim()) ?? "";
+  return values.find((value) => safeTrim(value)) ?? "";
 }
 
-function valueOrNA(value: string): string {
-  return value.trim() ? value.trim() : "N/A";
+function valueOrNA(value: string | null | undefined): string {
+  const trimmed = safeTrim(value);
+  return trimmed ? trimmed : "N/A";
 }
 
-function firstNonEmpty(...values: string[]): string {
-  return values.find((value) => value.trim()) ?? "";
+function firstNonEmpty(...values: Array<string | null | undefined>): string {
+  return values.find((value) => safeTrim(value)) ?? "";
 }
 
-function defangIfIpLike(value: string): string {
-  const trimmed = value.trim();
+function defangIfIpLike(value: string | null | undefined): string {
+  const trimmed = safeTrim(value);
   if (!trimmed) {
     return "N/A";
   }
@@ -1213,7 +1252,7 @@ function formatTime(date: Date): string {
 }
 
 function getIndefiniteArticle(phrase: string): string {
-  const lowered = phrase.trim().toLowerCase();
+  const lowered = safeTrim(phrase).toLowerCase();
   if (!lowered) {
     return "a";
   }
@@ -1231,6 +1270,10 @@ function getIndefiniteArticle(phrase: string): string {
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function safeTrim(value: string | null | undefined): string {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 export function toDisplayText(action: ResponseAction): string {

@@ -85,8 +85,10 @@ export async function buildEnrichmentOverrides(
   const parsedLog = parseAlertLog(input.logText);
 
   const ip1 =
-    input.alertType === "ImpossibleTravel" ? parsedLog.firstLoginIp.trim() : parsedLog.ipAddress.trim();
-  const ip2 = input.alertType === "ImpossibleTravel" ? parsedLog.secondLoginIp.trim() : "";
+    input.alertType === "ImpossibleTravel"
+      ? safeTrim(parsedLog.firstLoginIp)
+      : safeTrim(parsedLog.ipAddress);
+  const ip2 = input.alertType === "ImpossibleTravel" ? safeTrim(parsedLog.secondLoginIp) : "";
 
   const [ip1EnrichmentOverride, ip2EnrichmentOverride] = await Promise.all([
     enrichIp(ip1, needs, apiKeys),
@@ -277,5 +279,9 @@ async function fetchProxyCheck(ipAddress: string, apiKey: string) {
 }
 
 function toString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function safeTrim(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }

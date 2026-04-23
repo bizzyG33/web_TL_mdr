@@ -54,16 +54,32 @@ export const ensureCurrentUserInstance = cache(async () => {
 
   const { data: inserted, error } = await supabase
     .from("user_instances")
-    .insert({
-      user_id: user.id,
-      email: normalizedEmail,
-      settings: {}
-    })
+    .upsert(
+      {
+        user_id: user.id,
+        email: normalizedEmail,
+        settings: {}
+      },
+      {
+        onConflict: "user_id",
+        ignoreDuplicates: false
+      }
+    )
     .select("user_id, email, settings")
     .single<UserInstanceRow>();
 
   if (error) {
-    throw error;
+    const { data: fallback, error: fallbackError } = await supabase
+      .from("user_instances")
+      .select("user_id, email, settings")
+      .eq("user_id", user.id)
+      .single<UserInstanceRow>();
+
+    if (fallbackError) {
+      throw error;
+    }
+
+    return { user, instance: fallback };
   }
 
   return { user, instance: inserted };
