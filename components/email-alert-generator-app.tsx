@@ -421,6 +421,29 @@ export function EmailAlertGeneratorApp({ userEmail }: Props) {
               }}
             />
           </div>
+
+          <div className="output-card reasoning-card">
+            <div className="panel-heading">
+              <div>
+                <h2>Clear Reasoning Starter</h2>
+              </div>
+              <button
+                className="button-ghost"
+                type="button"
+                onClick={() =>
+                  copyText(
+                    generation?.clearReasoningStarter ?? "",
+                    "Clear reasoning starter copied to clipboard."
+                  )
+                }
+              >
+                Copy
+              </button>
+            </div>
+            <div className="readout">
+              {generation?.clearReasoningStarter ?? "No clear reasoning starter generated yet."}
+            </div>
+          </div>
         </section>
       </div>
     </main>
