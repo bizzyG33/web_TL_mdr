@@ -1067,13 +1067,14 @@ function buildFooter(
 }
 
 function formatUtcTimeOrNA(rawValue: string): string {
-  if (!safeTrim(rawValue)) {
+  const cleanedValue = normalizeDisplayedDateValue(rawValue);
+  if (!cleanedValue) {
     return "N/A";
   }
 
-  const parsed = parseFlexibleDate(rawValue);
+  const parsed = parseFlexibleDate(cleanedValue);
   if (Number.isNaN(parsed.getTime())) {
-    return "N/A";
+    return cleanedValue;
   }
 
   return new Intl.DateTimeFormat("en-US", {
@@ -1086,13 +1087,14 @@ function formatUtcTimeOrNA(rawValue: string): string {
 }
 
 function formatEndpointEstTimeOrNA(rawValue: string): string {
-  if (!safeTrim(rawValue)) {
+  const cleanedValue = normalizeDisplayedDateValue(rawValue);
+  if (!cleanedValue) {
     return "N/A";
   }
 
-  const parsed = parseFlexibleDate(rawValue);
+  const parsed = parseFlexibleDate(cleanedValue);
   if (Number.isNaN(parsed.getTime())) {
-    return rawValue;
+    return cleanedValue;
   }
 
   return new Intl.DateTimeFormat("en-US", {
@@ -1317,7 +1319,7 @@ function safeTrim(value: string | null | undefined): string {
 }
 
 function parseFlexibleDate(rawValue: string): Date {
-  const trimmed = safeTrim(rawValue);
+  const trimmed = normalizeDisplayedDateValue(rawValue);
   if (!trimmed) {
     return new Date(Number.NaN);
   }
@@ -1336,11 +1338,38 @@ function parseFlexibleDate(rawValue: string): Date {
   }
 
   const normalized = trimmed
+    .replace(/^"|"$/g, "")
     .replace(/\bUTC\b/i, "Z")
     .replace(/\s+/g, " ")
     .replace(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s+/, "$3-$1-$2 ");
 
   return new Date(normalized);
+}
+
+function normalizeDisplayedDateValue(rawValue: string): string {
+  const trimmed = safeTrim(rawValue)
+    .replace(/^"|"$/g, "")
+    .replace(/,$/, "");
+
+  if (!trimmed) {
+    return "";
+  }
+
+  const isoMatch = trimmed.match(
+    /\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?/
+  );
+  if (isoMatch) {
+    return isoMatch[0];
+  }
+
+  const usDateMatch = trimmed.match(
+    /\d{1,2}\/\d{1,2}\/\d{4},?\s+\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM|am|pm|UTC|Z)?/
+  );
+  if (usDateMatch) {
+    return usDateMatch[0];
+  }
+
+  return trimmed;
 }
 
 export function toDisplayText(action: ResponseAction): string {
