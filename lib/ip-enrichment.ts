@@ -283,15 +283,19 @@ async function fetchProxyCheck(ipAddress: string, apiKey: string) {
     regionCode: toString(ipData.regioncode) || toString(ipData.region),
     city: toString(ipData.city),
     provider,
-    vpnStatus: proxy || vpn
+    vpnStatus: proxy && vpn
       ? type
         ? `Proxy/VPN detected (${type})`
-        : proxy && vpn
-          ? "Proxy and VPN detected"
-          : proxy
-            ? "Proxy detected"
-            : "VPN detected"
-      : "No proxy/VPN detected",
+        : "Proxy/VPN detected"
+      : vpn
+        ? type
+          ? `VPN detected (${type})`
+          : "VPN detected"
+        : proxy
+          ? type
+            ? `Proxy detected (${type})`
+            : "Proxy detected"
+          : "No proxy/VPN detected",
     attackHistory: attackHistory
       ? `Proxycheck risk: ${risk || "N/A"}, Attack history: ${attackHistory}`
       : risk

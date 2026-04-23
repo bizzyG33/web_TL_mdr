@@ -378,7 +378,6 @@ export function EmailAlertGeneratorApp({ userEmail }: Props) {
           <div className="output-card subject-card">
             <div className="panel-heading">
               <div>
-                <span className="eyebrow">Subject</span>
                 <h2>Email Subject</h2>
               </div>
               <button
@@ -397,7 +396,6 @@ export function EmailAlertGeneratorApp({ userEmail }: Props) {
           <div className="output-card email-card">
             <div className="panel-heading">
               <div>
-                <span className="eyebrow">Email</span>
                 <h2>Generated HTML Email</h2>
               </div>
               <button
