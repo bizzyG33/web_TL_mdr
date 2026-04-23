@@ -598,6 +598,10 @@ input {
   min-height: 44px;
 }
 
+.subject-card {
+  display: block;
+}
+
 .email-card {
   display: grid;
   grid-template-rows: auto 1fr;
