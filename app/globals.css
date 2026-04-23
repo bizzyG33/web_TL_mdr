@@ -445,7 +445,8 @@ input {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  justify-content: flex-start;
+  padding: 10px 12px;
   border-radius: 8px;
   background: var(--panel-soft);
   border: 1px solid var(--line);
@@ -454,7 +455,11 @@ input {
 
 .radio-grid {
   grid-template-columns: 1fr;
-  gap: 4px;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(36, 55, 70, 0.3);
 }
 
 .toggle-row {
@@ -476,6 +481,31 @@ input {
 .choice-card span,
 .toggle-card span {
   line-height: 1.25;
+}
+
+.choice-card {
+  min-height: 44px;
+}
+
+.choice-card span {
+  flex: 1;
+  font-weight: 600;
+}
+
+.toggle-card {
+  min-height: 42px;
+  background: transparent;
+}
+
+.toggle-card span {
+  font-size: 0.95rem;
+}
+
+.field > .toggle-row {
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(36, 55, 70, 0.26);
 }
 
 .output-card {
@@ -543,9 +573,10 @@ input {
 
 .workspace-input .button,
 .workspace-input .button-ghost {
-  min-width: 88px;
-  padding: 6px 14px;
+  min-width: 110px;
+  padding: 8px 14px;
   font-size: 0.9rem;
+  justify-content: center;
 }
 
 .subject-card .readout {

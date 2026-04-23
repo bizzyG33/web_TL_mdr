@@ -117,9 +117,11 @@ export type ParsedAlertLog = {
   firstLoginCity: string;
   firstLoginRegion: string;
   firstLoginCountry: string;
+  firstLoginIsp: string;
   secondLoginCity: string;
   secondLoginRegion: string;
   secondLoginCountry: string;
+  secondLoginIsp: string;
   locationCity: string;
   locationState: string;
   locationCountry: string;
@@ -620,6 +622,20 @@ export function parseAlertLog(logText: string): ParsedAlertLog {
     get("UserName", "userName", "Subject User Name", "SubjectUserName", "Account Name") ||
     extractNamedField(message, "Account Name") ||
     get("userDisplayName", "userPrincipalName");
+  const firstLoginSourceIp = extractSectionField(logText, "FirstLogin", "SourceIp");
+  const secondLoginSourceIp = extractSectionField(logText, "SecondLogin", "SourceIp");
+  const firstLoginCreatedDate = extractSectionField(logText, "FirstLogin", "CreatedDate");
+  const secondLoginCreatedDate = extractSectionField(logText, "SecondLogin", "CreatedDate");
+  const firstLoginCity = extractSectionField(logText, "FirstLogin", "City");
+  const firstLoginCountry = extractSectionField(logText, "FirstLogin", "Country");
+  const firstLoginRegionCode = extractSectionField(logText, "FirstLogin", "RegionCode");
+  const firstLoginRegion = extractSectionField(logText, "FirstLogin", "Region");
+  const firstLoginAsnName = extractSectionField(logText, "FirstLogin", "ASNName");
+  const secondLoginCity = extractSectionField(logText, "SecondLogin", "City");
+  const secondLoginCountry = extractSectionField(logText, "SecondLogin", "Country");
+  const secondLoginRegionCode = extractSectionField(logText, "SecondLogin", "RegionCode");
+  const secondLoginRegion = extractSectionField(logText, "SecondLogin", "Region");
+  const secondLoginAsnName = extractSectionField(logText, "SecondLogin", "ASNName");
   const ipAddress =
     get(
       "ClientIP",
@@ -666,7 +682,7 @@ export function parseAlertLog(logText: string): ParsedAlertLog {
       "identity",
       "accountName",
       "UserName"
-    ),
+    ) || deriveDisplayNameFromUserName(get("UserName", "userName", "userPrincipalName")),
     userPrincipalName: get(
       "userPrincipalName",
       "user principal name",
@@ -727,11 +743,13 @@ export function parseAlertLog(logText: string): ParsedAlertLog {
     firstLoginIp:
       get("FirstLoginIp", "First Login IP", "firstLoginIp", "FirstLogin.IP", "FirstLogin.IpAddress") ||
       extractNamedField(logText, "FirstLogin.IP") ||
-      extractNamedField(logText, "First Login IP"),
+      extractNamedField(logText, "First Login IP") ||
+      firstLoginSourceIp,
     secondLoginIp:
       get("SecondLoginIp", "Second Login IP", "secondLoginIp", "SecondLogin.IP", "SecondLogin.IpAddress") ||
       extractNamedField(logText, "SecondLogin.IP") ||
-      extractNamedField(logText, "Second Login IP"),
+      extractNamedField(logText, "Second Login IP") ||
+      secondLoginSourceIp,
     firstLoginCreatedDateRaw:
       get(
         "FirstLoginCreatedDate",
@@ -743,7 +761,8 @@ export function parseAlertLog(logText: string): ParsedAlertLog {
       ) ||
       extractNamedField(logText, "FirstLogin.CreatedDate") ||
       extractNamedField(logText, "FirstLogin.CreatedDateTime") ||
-      extractNamedField(logText, "First Login Time"),
+      extractNamedField(logText, "First Login Time") ||
+      firstLoginCreatedDate,
     secondLoginCreatedDateRaw:
       get(
         "SecondLoginCreatedDate",
@@ -755,25 +774,36 @@ export function parseAlertLog(logText: string): ParsedAlertLog {
       ) ||
       extractNamedField(logText, "SecondLogin.CreatedDate") ||
       extractNamedField(logText, "SecondLogin.CreatedDateTime") ||
-      extractNamedField(logText, "Second Login Time"),
+      extractNamedField(logText, "Second Login Time") ||
+      secondLoginCreatedDate,
     firstLoginCity:
       get("FirstLoginCity", "First Login City", "FirstLogin.City", "FirstLogin.Location.City") ||
-      extractNamedField(logText, "FirstLogin.City"),
+      extractNamedField(logText, "FirstLogin.City") ||
+      firstLoginCity,
     firstLoginRegion:
       get("FirstLoginRegion", "First Login Region", "FirstLogin.Region", "FirstLogin.Location.State") ||
-      extractNamedField(logText, "FirstLogin.Region"),
+      extractNamedField(logText, "FirstLogin.Region") ||
+      firstLoginRegionCode ||
+      firstLoginRegion,
     firstLoginCountry:
       get("FirstLoginCountry", "First Login Country", "FirstLogin.Country", "FirstLogin.Location.Country") ||
-      extractNamedField(logText, "FirstLogin.Country"),
+      extractNamedField(logText, "FirstLogin.Country") ||
+      firstLoginCountry,
+    firstLoginIsp: firstLoginAsnName,
     secondLoginCity:
       get("SecondLoginCity", "Second Login City", "SecondLogin.City", "SecondLogin.Location.City") ||
-      extractNamedField(logText, "SecondLogin.City"),
+      extractNamedField(logText, "SecondLogin.City") ||
+      secondLoginCity,
     secondLoginRegion:
       get("SecondLoginRegion", "Second Login Region", "SecondLogin.Region", "SecondLogin.Location.State") ||
-      extractNamedField(logText, "SecondLogin.Region"),
+      extractNamedField(logText, "SecondLogin.Region") ||
+      secondLoginRegionCode ||
+      secondLoginRegion,
     secondLoginCountry:
       get("SecondLoginCountry", "Second Login Country", "SecondLogin.Country", "SecondLogin.Location.Country") ||
-      extractNamedField(logText, "SecondLogin.Country"),
+      extractNamedField(logText, "SecondLogin.Country") ||
+      secondLoginCountry,
+    secondLoginIsp: secondLoginAsnName,
     locationCity: get("LocationCity", "city", "City"),
     locationState: get("LocationState", "state", "Region"),
     locationCountry: get("LocationCountry", "countryOrRegion", "Country", "country"),
@@ -869,6 +899,12 @@ function buildIpEnrichment(
         ? parsed.firstLoginCountry
         : firstNonEmpty(parsed.locationCountry, parsed.fallbackCountry)
       : parsed.secondLoginCountry;
+  const isp =
+    target === "ip1"
+      ? isImpossibleTravel
+        ? parsed.firstLoginIsp
+        : "Unavailable in web-only mode"
+      : parsed.secondLoginIsp;
 
   const base: Omit<IpEnrichmentResult, "locationDisplay"> = {
     ipAddress,
@@ -876,7 +912,7 @@ function buildIpEnrichment(
     region: region || "Unknown",
     regionCode: region || "Unknown",
     city: city || "Unknown",
-    isp: "Unavailable in web-only mode",
+    isp: isp || "Unavailable in web-only mode",
     usedParsedLocationFallback: Boolean(city || region || country),
     abuseSummary: "Unavailable in web-only mode",
     abuseConfidenceScore: "N/A",
@@ -1181,6 +1217,30 @@ function normalizeCertificate(value: string): string {
 
   const match = value.match(/(?:CN|cn)=([^,]+)/);
   return match?.[1]?.trim() ?? safeTrim(value);
+}
+
+function extractSectionField(text: string, sectionName: string, fieldName: string): string {
+  const sectionPattern = new RegExp(
+    `${escapeRegex(sectionName)}\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*[A-Za-z][A-Za-z0-9]*\\s*:|$)`,
+    "i"
+  );
+  const sectionMatch = text.match(sectionPattern);
+  if (!sectionMatch?.[1]) {
+    return "";
+  }
+
+  const fieldPattern = new RegExp(`${escapeRegex(fieldName)}\\s*:\\s*(.+)`, "i");
+  const fieldMatch = sectionMatch[1].match(fieldPattern);
+  return fieldMatch?.[1]?.split(/\r?\n/)[0]?.trim() ?? "";
+}
+
+function deriveDisplayNameFromUserName(userName: string): string {
+  const trimmed = safeTrim(userName);
+  if (!trimmed) {
+    return "";
+  }
+
+  return trimmed.split("@")[0]?.trim() ?? trimmed;
 }
 
 function buildSignatureNameFromEmail(email: string): string {
